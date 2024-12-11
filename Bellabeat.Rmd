@@ -1,0 +1,134 @@
+---
+title: "Bellabeat Analysis"
+author: "Krish Verma"
+date: "2024-12-05"
+output: html_document
+---
+
+## Introduction
+
+This document contains analysis of fitness tracker data taken from Kaggle, uploaded by Mobius. Analysis has been undertaken by assigning two different Bellabeat products: Time and Leaf Urban randomly as per their User Id. The data used is not the actual readings from the said products. 
+
+## Business Task 
+
+Analyze consumers readings of fitness data and apply this analysis to a bellabeat product
+
+## Initialising and Viewing the Data
+
+```{r}
+library(tidyverse)
+
+# Load the activity data
+activity <- read_csv("dailyActivity_merged.csv")
+
+# Randomly assign products based on user ID
+set.seed(42)  # For reproducibility
+activity <- activity %>%
+  mutate(Product = ifelse(Id %in% sample(unique(Id), length(unique(Id)) / 2), 
+                          "Leaf Urban", "Time"))
+
+# Modify previous code to include Product
+Activity <- activity %>% 
+  select(-ActivityDate) %>% 
+  rename(ActivityDayConsistent = ActivityDateConsistent)
+
+head(Activity)
+```
+
+## Descriptive Analysis
+
+Following are the summary statistics, that is mean and median for Steps, Calories, Sedentary Hours and Active Minutes which are metrics we will be looking into for conducting the analysis.
+
+```{r}
+product_summary <- activity %>%
+  group_by(Product) %>%
+  summarise(
+    Avg_Steps = mean(TotalSteps, na.rm = TRUE),
+    Median_Steps = median(TotalSteps, na.rm = TRUE),
+    Avg_Calories = mean(Calories, na.rm = TRUE),
+    Median_Calories = median(Calories, na.rm = TRUE),
+    Avg_Sedentary_Hours = mean(SedentaryHours, na.rm = TRUE),
+    Median_Sedentary_Hours = median(SedentaryHours, na.rm = TRUE),
+    Avg_Active_min = mean(VeryActiveMinutes, na.rm = TRUE),
+    Median_Active_min = median(VeryActiveMinutes, na.rm = TRUE)
+  )
+
+print(product_summary)
+```
+## Visualisations
+Plotting series of visualisations to establish relationship between usage of products by users based on product and the metrics: Steps, Calories, Sedentary Hours and Active Minutes. 
+
+## Total Steps vs Calories 
+This scatterplot creates a visual of user data on steps and calories burnt in a day for the products: Leaf Urban and Time.
+The following graph shows that a positive correlation exists between steps and calories. Also for the same number of steps, most time users have higher calories burnt.
+
+```{r}
+ggplot(activity, aes(x = TotalSteps, y = Calories, color = Product)) +
+  geom_jitter() +
+  geom_smooth(method = "lm", color = 'black', lwd = 2) +
+  labs(title = "Total Steps vs Calories by Product", x = "Total Steps", y = "Calories")
+```
+
+## Distribution of Calories
+
+The following boxplot shows that Time users have a wider spread of calories, since the size of their boxplot which covers 50% of the observations is significantly bigger than Leaf Urban users. Time users burn 2456 calories on average in a day which is 321 more than that of Leaf Urban users.
+
+
+```{r}
+ggplot(activity, aes(x = Product, y = Calories, fill = Product)) +
+  geom_boxplot() +
+  labs(title = "Calories Distribution by Product", x = "Product", y = "Calories") +
+  theme_minimal()
+```
+
+## Distribution of Total Steps
+The following boxplot shows that the total steps for both products follow a similar distribution with Time users having a slightly higher number of steps per day.
+
+```{r}
+ggplot(activity, aes(x = Product, y = TotalSteps, fill = Product)) +
+  geom_boxplot() +
+  labs(title = "Total Steps Distribution by Product", x = "Product", y = "Total Steps") +
+  theme_minimal()
+```
+## Average Daily Steps
+
+The following line chart shows the average number of steps walked by users of the two products on the different days of the week.
+Seeing the graph, it can be inferred that Time users prefer walking/ going out on weekends while Leaf Urban users have a relatively higher step count on weekdays.
+
+```{r}
+ggplot(activity, aes(x = Day, y = TotalSteps, color = Product, group = Product)) +
+  stat_summary(fun = "mean", geom = "line", size = 1) +
+  labs(title = "Average Daily Steps by Product", x = "Day", y = "Average Steps") +
+  theme_minimal()
+```
+
+## Sedentary Hours 
+
+It can be seen in the following boxplot that Leaf Urban users have lower average and median sedentary hours at 16.1 hrs and 16.7 hrs respectively. However, since their calories burnt and steps covered are lesser than Time users it must imply that the activities they must be performing are of lightly active nature an example of which is casual walking.
+
+
+```{r}
+ggplot(activity, aes(x = Product, y = SedentaryHours, fill = Product)) +
+  geom_boxplot() +
+  labs(title = "Sedentary Hours Distribution by Product", x = "Product", y = "Sedentary Hours") +
+  theme_minimal()
+```
+
+## Density of Very Active Minutes
+The following density plot shows that on average most users are highly active only for 0-30 mins in a day. Specifically, Leaf Urban users are highly active for 22 mins on average, a minute higher than Time users
+
+
+```{r}
+ggplot(activity, aes(x = VeryActiveMinutes, color = Product, fill = Product)) +
+  geom_density(alpha = 0.4) +
+  labs(title = "Density Plot of Very Active Minutes by Product", 
+       x = "Very Active Minutes", 
+       y = "Density") +
+  theme_minimal() +
+  scale_color_manual(values = c("Leaf Urban" = "steelblue", "Time" = "orange")) +
+  scale_fill_manual(values = c("Leaf Urban" = "steelblue", "Time" = "orange"))
+```
+
+## Conclusion
+
+To conclude I would like to say that Time also serves another purpose apart from being a fitness tracker, that is as a watch which is more useful and slightly more popular than Leaf Urban which is designed in the form of jewelry. 
